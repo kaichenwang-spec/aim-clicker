@@ -7,9 +7,6 @@
 # =========================================================
 
 
-# Image assets used for the background and pistol.
-range_img = None
-pistol_img = None
 
 # A list storing target positions as [x, y] coordinates.
 targets = []
@@ -46,25 +43,9 @@ def settings():
 
 
 def setup():
-    global range_img
-    global pistol_img
-
-    # Load external images from the sketch's data folder.
-    range_img = loadImage("range.png")
-    pistol_img = loadImage("pistol.png")
-
-    if range_img == None:
-        print("ERROR: range.png NOT FOUND")
-    else:
-        print("Background loaded")
-
-    if pistol_img == None:
-        print("ERROR: pistol.png NOT FOUND")
-    else:
-        print("Pistol loaded")
-
     noCursor()
     create_targets()
+
 
 
 def draw():
