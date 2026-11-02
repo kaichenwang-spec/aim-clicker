@@ -1,14 +1,13 @@
+
 # =========================================================
 # FPS AIM TRAINER
 # Processing 4 - Python Mode
 # A 30-second shooting game with randomly placed targets,
 # hit detection, accuracy tracking and shooting effects.
+# All graphics are created directly through code.
+# No external image files are required.
 # =========================================================
 
-
-# Image assets used for the background and pistol.
-range_img = None
-pistol_img = None
 
 # A list storing target positions as [x, y] coordinates.
 targets = []
@@ -33,38 +32,32 @@ shake_x = 0
 shake_y = 0
 shake_frames = 0
 
-gun_recoil = 0
 last_shot_time = -1000
 
 # Stores temporary hit effects as [x, y, creation_time].
 hit_effects = []
 
 
+# =========================================================
+# GAME SETUP
+# =========================================================
+
 def settings():
     size(1000, 700)
 
 
 def setup():
-    global range_img
-    global pistol_img
-
-    # Load external images from the sketch's data folder.
-    range_img = loadImage("range.png")
-    pistol_img = loadImage("pistol.png")
-
-    if range_img == None:
-        print("ERROR: range.png NOT FOUND")
-    else:
-        print("Background loaded")
-
-    if pistol_img == None:
-        print("ERROR: pistol.png NOT FOUND")
-    else:
-        print("Pistol loaded")
-
+    # Hide the default mouse cursor.
+    # A custom crosshair will be drawn instead.
     noCursor()
+
+    # Create five targets when the program starts.
     create_targets()
 
+
+# =========================================================
+# MAIN DRAW LOOP
+# =========================================================
 
 def draw():
     # The main loop updates animations and draws the game
@@ -72,13 +65,11 @@ def draw():
 
     update_camera()
     update_shake()
-    update_recoil()
 
     draw_range()
 
     if game_state == "start":
         draw_targets()
-        draw_gun()
         draw_crosshair()
         draw_start_screen()
 
@@ -86,16 +77,18 @@ def draw():
         update_game()
         draw_targets()
         draw_hit_effects()
-        draw_gun()
         draw_hud()
         draw_crosshair()
 
     elif game_state == "gameover":
         draw_targets()
-        draw_gun()
         draw_crosshair()
         draw_game_over()
 
+
+# =========================================================
+# CAMERA MOVEMENT
+# =========================================================
 
 def update_camera():
     global look_x
@@ -111,20 +104,48 @@ def update_camera():
     look_y += (wanted_y - look_y) * 0.08
 
 
-def draw_range():
-    if range_img != None:
-        # Make the background slightly larger than the
-        # window to allow movement without empty edges.
-        image(
-            range_img,
-            -50 - look_x + shake_x,
-            -35 - look_y + shake_y,
-            width + 100,
-            height + 70
-        )
-    else:
-        background(50)
+# =========================================================
+# GAME BACKGROUND
+# =========================================================
 
+def draw_range():
+    # Create a simple shooting range using Processing shapes.
+    # This replaces the original external background image.
+
+    background(40, 45, 55)
+
+    # Draw a darker upper wall.
+    noStroke()
+    fill(32, 37, 47)
+    rect(0, 0, width, 250)
+
+    # Draw the main shooting range wall.
+    fill(55, 62, 72)
+    rect(0, 250, width, 280)
+
+    # Draw the floor.
+    fill(35, 40, 48)
+    rect(0, 530, width, 170)
+
+    # Draw horizontal lines to create depth.
+    stroke(85, 95, 105)
+    strokeWeight(2)
+
+    line(0, 250, width, 250)
+    line(0, 530, width, 530)
+
+    # Draw a simple frame around the target area.
+    noFill()
+    stroke(105, 115, 125)
+    strokeWeight(3)
+    rect(130, 260, 740, 220)
+
+    noStroke()
+
+
+# =========================================================
+# TARGET GENERATION
+# =========================================================
 
 def create_targets():
     # Clear previous targets before generating a new set.
@@ -142,7 +163,7 @@ def add_target():
     # The attempt limit prevents an infinite loop.
     while attempts < 100:
         x = random(170, 830)
-        y = random(275, 445)
+        y = random(300, 440)
 
         valid = True
 
@@ -168,12 +189,12 @@ def move_target(target):
     # Generate a new position after the target is hit.
     while attempts < 100:
         new_x = random(170, 830)
-        new_y = random(275, 445)
+        new_y = random(300, 440)
 
         valid = True
 
         for other in targets:
-            if other != target:
+            if other is not target:
                 distance = dist(
                     new_x,
                     new_y,
@@ -195,6 +216,10 @@ def move_target(target):
         attempts += 1
 
 
+# =========================================================
+# TARGET DRAWING
+# =========================================================
+
 def draw_targets():
     pushMatrix()
 
@@ -214,26 +239,67 @@ def draw_targets():
 def draw_target(x, y):
     # Build a circular target from layered ellipses.
     # All target graphics are drawn directly through code.
+
     noStroke()
 
+    # Target shadow.
     fill(0, 0, 0, 70)
-    ellipse(x + 4, y + 5, target_radius * 2.6, target_radius * 2.6)
+    ellipse(
+        x + 4,
+        y + 5,
+        target_radius * 2.6,
+        target_radius * 2.6
+    )
 
+    # Outer white ring.
     fill(235, 235, 230)
-    ellipse(x, y, target_radius * 2.4, target_radius * 2.4)
+    ellipse(
+        x,
+        y,
+        target_radius * 2.4,
+        target_radius * 2.4
+    )
 
+    # Dark ring.
     fill(55, 58, 60)
-    ellipse(x, y, target_radius * 1.95, target_radius * 1.95)
+    ellipse(
+        x,
+        y,
+        target_radius * 1.95,
+        target_radius * 1.95
+    )
 
+    # Red ring.
     fill(205, 45, 40)
-    ellipse(x, y, target_radius * 1.55, target_radius * 1.55)
+    ellipse(
+        x,
+        y,
+        target_radius * 1.55,
+        target_radius * 1.55
+    )
 
+    # Inner red circle.
     fill(125, 20, 20)
-    ellipse(x, y, target_radius * 0.9, target_radius * 0.9)
+    ellipse(
+        x,
+        y,
+        target_radius * 0.9,
+        target_radius * 0.9
+    )
 
+    # Black centre.
     fill(20, 20, 20)
-    ellipse(x, y, target_radius * 0.35, target_radius * 0.35)
+    ellipse(
+        x,
+        y,
+        target_radius * 0.35,
+        target_radius * 0.35
+    )
 
+
+# =========================================================
+# CUSTOM CROSSHAIR
+# =========================================================
 
 def draw_crosshair():
     gap = 6
@@ -243,61 +309,42 @@ def draw_crosshair():
     stroke(80, 255, 120)
     strokeWeight(2)
 
-    line(mouseX, mouseY - gap, mouseX, mouseY - gap - arm)
-    line(mouseX, mouseY + gap, mouseX, mouseY + gap + arm)
-    line(mouseX - gap, mouseY, mouseX - gap - arm, mouseY)
-    line(mouseX + gap, mouseY, mouseX + gap + arm, mouseY)
+    line(
+        mouseX,
+        mouseY - gap,
+        mouseX,
+        mouseY - gap - arm
+    )
+
+    line(
+        mouseX,
+        mouseY + gap,
+        mouseX,
+        mouseY + gap + arm
+    )
+
+    line(
+        mouseX - gap,
+        mouseY,
+        mouseX - gap - arm,
+        mouseY
+    )
+
+    line(
+        mouseX + gap,
+        mouseY,
+        mouseX + gap + arm,
+        mouseY
+    )
 
     noStroke()
     fill(80, 255, 120)
     ellipse(mouseX, mouseY, 3, 3)
 
 
-def draw_gun():
-    if pistol_img == None:
-        return
-
-    # Add subtle pistol movement based on mouse position.
-    sway_x = (mouseX - width / 2) * 0.035
-    sway_y = (mouseY - height / 2) * 0.018
-
-    # Combine the original position with sway and recoil.
-    gun_x = 555 + sway_x + shake_x * 0.4
-    gun_y = 360 + sway_y + gun_recoil + shake_y * 0.4
-
-    gun_width = 470
-    gun_height = 350
-
-    image(
-        pistol_img,
-        gun_x,
-        gun_y,
-        gun_width,
-        gun_height
-    )
-
-    # Display a brief muzzle flash after each shot.
-    shot_age = millis() - last_shot_time
-
-    if shot_age < 55:
-        muzzle_x = gun_x + 120
-        muzzle_y = gun_y + 53
-
-        noStroke()
-
-        fill(255, 245, 190, 210)
-        ellipse(muzzle_x, muzzle_y, 38, 38)
-
-        fill(255, 175, 55, 190)
-        triangle(
-            muzzle_x - 5,
-            muzzle_y,
-            muzzle_x - 52,
-            muzzle_y - 22,
-            muzzle_x - 48,
-            muzzle_y + 23
-        )
-
+# =========================================================
+# SCREEN SHAKE EFFECT
+# =========================================================
 
 def update_shake():
     global shake_x
@@ -306,25 +353,20 @@ def update_shake():
 
     # Apply random camera offsets for a few frames
     # after firing to simulate weapon impact.
+
     if shake_frames > 0:
         shake_x = random(-3, 3)
         shake_y = random(-2, 2)
         shake_frames -= 1
+
     else:
         shake_x = 0
         shake_y = 0
 
 
-def update_recoil():
-    global gun_recoil
-
-    # Gradually reduce recoil so the pistol returns
-    # smoothly to its original position.
-    gun_recoil *= 0.72
-
-    if abs(gun_recoil) < 0.1:
-        gun_recoil = 0
-
+# =========================================================
+# HIT EFFECTS
+# =========================================================
 
 def draw_hit_effects():
     pushMatrix()
@@ -349,6 +391,7 @@ def draw_hit_effects():
         else:
             # Fade the effect over time while expanding
             # the circle and moving the score text upward.
+
             alpha = map(age, 0, 350, 255, 0)
 
             noFill()
@@ -358,13 +401,23 @@ def draw_hit_effects():
             effect_size = 25 + age * 0.14
             ellipse(x, y, effect_size, effect_size)
 
+            noStroke()
             fill(255, 255, 255, alpha)
             textAlign(CENTER)
             textSize(21)
-            text("+1", x, y - 32 - age * 0.05)
+
+            text(
+                "+1",
+                x,
+                y - 32 - age * 0.05
+            )
 
     popMatrix()
 
+
+# =========================================================
+# GAME HUD
+# =========================================================
 
 def draw_hud():
     total_clicks = score + misses
@@ -373,6 +426,7 @@ def draw_hud():
     # Check total_clicks first to avoid division by zero.
     if total_clicks > 0:
         accuracy = float(score) / total_clicks * 100
+
     else:
         accuracy = 0
 
@@ -385,6 +439,7 @@ def draw_hud():
 
     stroke(150, 190, 220, 100)
     strokeWeight(1)
+
     line(742, 34, 742, 90)
     line(858, 34, 858, 90)
 
@@ -403,6 +458,7 @@ def draw_hud():
     text("%.1f" % remaining, 800, 80)
     text("%.1f%%" % accuracy, 917, 80)
 
+    # Draw the game title.
     textAlign(LEFT)
     fill(255)
     textSize(28)
@@ -417,6 +473,10 @@ def draw_hud():
     text("MISSES: " + str(misses), 27, 89)
 
 
+# =========================================================
+# GAME TIMER
+# =========================================================
+
 def get_remaining_time():
     if game_state != "playing":
         return game_length
@@ -424,6 +484,7 @@ def get_remaining_time():
     # Convert elapsed milliseconds into seconds
     # and subtract them from the game duration.
     elapsed = (millis() - start_time) / 1000.0
+
     remaining = game_length - elapsed
 
     if remaining < 0:
@@ -440,17 +501,26 @@ def update_game():
         game_state = "gameover"
 
 
+# =========================================================
+# GAME START AND RESET
+# =========================================================
+
 def start_game():
     global score
     global misses
     global start_time
     global game_state
-    global gun_recoil
+    global shake_frames
+    global shake_x
+    global shake_y
 
     # Reset game statistics, effects and target positions.
     score = 0
     misses = 0
-    gun_recoil = 0
+
+    shake_frames = 0
+    shake_x = 0
+    shake_y = 0
 
     del hit_effects[:]
 
@@ -461,13 +531,16 @@ def start_game():
     game_state = "playing"
 
 
+# =========================================================
+# MOUSE INPUT AND HIT DETECTION
+# =========================================================
+
 def mousePressed():
     global score
     global misses
     global game_state
 
     global last_shot_time
-    global gun_recoil
     global shake_frames
 
     # Clicking the start screen begins the game.
@@ -475,19 +548,26 @@ def mousePressed():
         start_game()
         return
 
+    # Ignore clicks after the game ends.
     if game_state == "gameover":
         return
 
     if game_state == "playing":
-        # Trigger the shooting animations.
+
+        # Do not allow shots after time has expired.
+        if get_remaining_time() <= 0:
+            game_state = "gameover"
+            return
+
+        # Trigger the shooting animation.
         last_shot_time = millis()
-        gun_recoil = -17
         shake_frames = 3
 
         # Track whether this mouse click hits a target.
         hit = False
 
         for target in targets:
+
             # Convert target positions to screen coordinates
             # by including camera movement and shake.
             target_screen_x = target[0] - look_x + shake_x
@@ -503,8 +583,8 @@ def mousePressed():
             )
 
             # A hit occurs when the distance is within
-            # the target radius.
-            if distance <= target_radius:
+            # the visible target radius.
+            if distance <= target_radius * 1.2:
                 score += 1
 
                 # Store a temporary hit effect with its
@@ -525,6 +605,10 @@ def mousePressed():
         if hit == False:
             misses += 1
 
+
+# =========================================================
+# START SCREEN
+# =========================================================
 
 def draw_start_screen():
     # Display a semi-transparent introduction screen.
@@ -555,12 +639,17 @@ def draw_start_screen():
     text("CLICK TO START", width / 2, 421)
 
 
+# =========================================================
+# GAME OVER SCREEN
+# =========================================================
+
 def draw_game_over():
     total_clicks = score + misses
 
     # Calculate the final accuracy using hits and misses.
     if total_clicks > 0:
         accuracy = float(score) / total_clicks * 100
+
     else:
         accuracy = 0
 
@@ -585,14 +674,33 @@ def draw_game_over():
 
     fill(255)
     textSize(20)
-    text("HITS        " + str(score), width / 2, 375)
-    text("MISSES      " + str(misses), width / 2, 410)
-    text("ACCURACY    %.1f%%" % accuracy, width / 2, 445)
+
+    text(
+        "HITS         " + str(score),
+        width / 2,
+        375
+    )
+
+    text(
+        "MISSES       " + str(misses),
+        width / 2,
+        410
+    )
+
+    text(
+        "ACCURACY      %.1f%%" % accuracy,
+        width / 2,
+        445
+    )
 
     fill(245, 185, 80)
     textSize(17)
     text("PRESS R TO RETRY", width / 2, 515)
 
+
+# =========================================================
+# KEYBOARD INPUT
+# =========================================================
 
 def keyPressed():
     # Allow the player to restart after the game ends.
